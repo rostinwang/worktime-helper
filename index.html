@@ -2,14 +2,23 @@
 <html lang="zh-Hant-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>上下班時間與行事曆小幫手</title>
+    
+    <!-- 針對手機加入主畫面 (PWA) 的優化設定 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#f3f4f6">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background-color: #f3f4f6;
+            /* 防止手機點擊時出現的高光閃爍 */
+            -webkit-tap-highlight-color: transparent; 
         }
     </style>
 </head>
@@ -29,7 +38,14 @@
                     上班時間（打卡時間）
                 </label>
                 <input type="datetime-local" id="startTime" 
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow text-gray-700">
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow text-gray-700 text-base">
+                
+                <!-- 快速微調按鈕 -->
+                <div class="flex gap-2 mt-2 justify-end">
+                    <button type="button" id="minus30Btn" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 py-1.5 px-3 rounded-full transition-colors">-30 分</button>
+                    <button type="button" id="minus15Btn" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 py-1.5 px-3 rounded-full transition-colors">-15 分</button>
+                    <button type="button" id="resetTimeBtn" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-1.5 px-3 rounded-full transition-colors">設為現在</button>
+                </div>
             </div>
 
             <!-- 計算結果顯示區塊 -->
@@ -41,27 +57,32 @@
             </div>
 
             <!-- 行事曆設定選項 -->
-            <div>
-                <label for="eventTitle" class="block text-sm font-medium text-gray-700 mb-1">
-                    行事曆事件標題
-                </label>
-                <input type="text" id="eventTitle" value="實習/辦公紀錄 (上下班)" 
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow text-gray-700">
+            <div class="space-y-4">
+                <div>
+                    <label for="eventTitle" class="block text-sm font-medium text-gray-700 mb-1">
+                        行事曆事件標題
+                    </label>
+                    <input type="text" id="eventTitle" value="實習/辦公紀錄 (上下班)" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow text-gray-700 text-base">
+                </div>
+
+                <div>
+                    <label for="eventLocation" class="block text-sm font-medium text-gray-700 mb-1">
+                        實習 / 辦公地點
+                    </label>
+                    <input type="text" id="eventLocation" placeholder="例如：教育局、某某國小" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow text-gray-700 text-base">
+                </div>
             </div>
 
             <!-- 進階設定：指定特定行事曆 -->
             <details class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <summary class="text-sm font-medium cursor-pointer text-gray-700 hover:text-blue-600 outline-none">
-                    進階設定：指定特定行事曆 (例如：行政實習上下班)
+                    進階設定：指定特定行事曆 (例如：行政實習)
                 </summary>
                 <div class="mt-4 space-y-3">
                     <p class="text-xs text-gray-500 leading-relaxed">
-                        若要自動記錄到特定行事曆，請填入該行事曆的「日曆 ID」。(設定會自動儲存在此設備，不需每次填寫)<br>
-                        <strong class="text-gray-600">如何尋找日曆 ID：</strong><br>
-                        1. 用電腦網頁版開啟 Google 行事曆。<br>
-                        2. 左側找到「行政實習上下班」，點擊旁邊的 ⋮ 選擇「設定和共用」。<br>
-                        3. 往下捲動找到「整合日曆」區塊。<br>
-                        4. 複製「日曆 ID」(通常包含 @group.calendar.google.com) 貼至下方。
+                        已自動儲存。若需更改，請填入新的「日曆 ID」。
                     </p>
                     <input type="text" id="calendarId" placeholder="例如：abc123def@group.calendar.google.com" 
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none text-gray-700">
@@ -70,7 +91,7 @@
 
             <!-- 按鈕 -->
             <button id="addToCalendarBtn" 
-                class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors shadow-sm cursor-pointer">
+                class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors shadow-sm cursor-pointer active:scale-95 transform">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                     <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -87,41 +108,49 @@
             const startTimeInput = document.getElementById('startTime');
             const endTimeDisplay = document.getElementById('endTimeDisplay');
             const eventTitleInput = document.getElementById('eventTitle');
+            const eventLocationInput = document.getElementById('eventLocation');
             const calendarIdInput = document.getElementById('calendarId');
             const addToCalendarBtn = document.getElementById('addToCalendarBtn');
 
-            // 1. 初始化：將時間選擇器預設為現在時刻
+            // 1. 初始化：載入記憶資料並設定為現在時刻
             const setInitialTime = () => {
                 const now = new Date();
-                // 修正時區偏移，確保 datetime-local 顯示正確的當地時間
                 const tzOffset = now.getTimezoneOffset() * 60000; 
                 const localISOTime = (new Date(now - tzOffset)).toISOString().slice(0, 16);
                 startTimeInput.value = localISOTime;
                 
-                // 載入之前儲存的日曆 ID
+                // 載入之前儲存的日曆 ID 與 地點
                 const savedCalId = localStorage.getItem('gcalId');
+                const savedLocation = localStorage.getItem('gcalLocation');
                 if(savedCalId) calendarIdInput.value = savedCalId;
+                if(savedLocation) eventLocationInput.value = savedLocation;
 
                 calculateEndTime();
             };
 
-            // 2. 將 JavaScript Date 物件轉換為 Google 行事曆需要的 UTC 格式 (YYYYMMDDTHHmmssZ)
+            // 微調時間邏輯
+            const adjustTime = (minutes) => {
+                const currentVal = new Date(startTimeInput.value);
+                if (isNaN(currentVal)) return;
+                const newVal = new Date(currentVal.getTime() + minutes * 60000);
+                const tzOffset = newVal.getTimezoneOffset() * 60000; 
+                startTimeInput.value = (new Date(newVal - tzOffset)).toISOString().slice(0, 16);
+                calculateEndTime();
+            };
+
+            // 2. 將 JavaScript Date 轉為 Google 行事曆 UTC 格式
             const formatGcalDate = (date) => {
                 return date.toISOString().replace(/-|:|\.\d\d\d/g, "");
             };
 
-            // 3. 計算時間並更新畫面與按鈕連結
+            // 3. 計算時間並更新連結
             const calculateEndTime = () => {
                 const startStr = startTimeInput.value;
                 if (!startStr) return;
 
-                // 取得使用者輸入的上班時間
                 const startDate = new Date(startStr);
-                
-                // 加上 9.5 小時 (9.5 小時 * 60 分鐘 * 60 秒 * 1000 毫秒)
                 const endDate = new Date(startDate.getTime() + 9.5 * 60 * 60 * 1000);
 
-                // 更新畫面顯示 (格式化為 台灣習慣的日期時間表示)
                 const options = { 
                     month: 'short', day: 'numeric', 
                     hour: '2-digit', minute: '2-digit',
@@ -129,35 +158,48 @@
                 };
                 endTimeDisplay.textContent = endDate.toLocaleString('zh-TW', options);
 
-                // 產生 Google Calendar 連結
                 const gcalStart = formatGcalDate(startDate);
                 const gcalEnd = formatGcalDate(endDate);
                 const title = encodeURIComponent(eventTitleInput.value || '上班紀錄');
                 const details = encodeURIComponent('透過小幫手自動計算 (工時 9.5 小時)');
                 
-                // 組合 URL
                 let gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${gcalStart}/${gcalEnd}&details=${details}`;
                 
-                // 若有填寫日曆 ID，則加入 src 參數指定行事曆
+                // 加入地點參數
+                const locationVal = eventLocationInput.value.trim();
+                if (locationVal) {
+                    gcalUrl += `&location=${encodeURIComponent(locationVal)}`;
+                }
+
+                // 加入日曆 ID 參數
                 const calId = calendarIdInput.value.trim();
                 if (calId) {
                     gcalUrl += `&src=${encodeURIComponent(calId)}`;
                 }
 
-                // 更新按鈕的點擊事件
-                addToCalendarBtn.onclick = () => {
-                    window.open(gcalUrl, '_blank');
-                };
+                addToCalendarBtn.onclick = () => window.open(gcalUrl, '_blank');
             };
 
-            // 綁定事件監聽器：當時間或標題改變時，重新計算
+            // 綁定事件監聽器
             startTimeInput.addEventListener('input', calculateEndTime);
             eventTitleInput.addEventListener('input', calculateEndTime);
+            
+            // 地點改變時，記憶到設備中並重新計算
+            eventLocationInput.addEventListener('input', () => {
+                localStorage.setItem('gcalLocation', eventLocationInput.value.trim());
+                calculateEndTime();
+            });
+
+            // 日曆 ID 改變時，記憶到設備中並重新計算
             calendarIdInput.addEventListener('input', () => {
-                // 將使用者輸入的日曆 ID 儲存在瀏覽器中
                 localStorage.setItem('gcalId', calendarIdInput.value.trim());
                 calculateEndTime();
             });
+
+            // 綁定按鈕事件
+            document.getElementById('minus30Btn').addEventListener('click', () => adjustTime(-30));
+            document.getElementById('minus15Btn').addEventListener('click', () => adjustTime(-15));
+            document.getElementById('resetTimeBtn').addEventListener('click', setInitialTime);
 
             // 啟動時執行一次
             setInitialTime();
